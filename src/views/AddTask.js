@@ -19,12 +19,9 @@ export default class AddTask extends Component {
 
     save = () => {
         const newTask = {
-            ...this.state
+            desc: this.state.desc,
+            date: moment(this.state.date).format('YYYY-MM-DD HH:mm:ss')
         }
-        // const newTask = {
-        //     desc: this.state.desc,
-        //     date: moment(this.state.date).format('YYYY-MM-DD HH:mm:ss')
-        // }
 
         // if (this.props.onSave) {
         //     this.props.onSave(newTask)
@@ -75,7 +72,7 @@ export default class AddTask extends Component {
                     <View style={styles.background}></View>
                 </TouchableWithoutFeedback>
                 <View style={styles.container}>
-                    <Text style={styles.header}>Nova Tarefa</Text>
+                    <Text style={[styles.header, {backgroundColor: this.props.color}]}>Nova Tarefa</Text>
                     <TextInput style={styles.input} 
                         placeholder='Informe a descrição'
                         onChangeText={desc => this.setState({ desc })}
@@ -83,10 +80,10 @@ export default class AddTask extends Component {
                     {this.getDateTimePicker()}
                     <View style={styles.buttons}>
                         <TouchableOpacity onPress={this.props.onCancel}>
-                            <Text style={styles.button}>Cancelar</Text>
+                            <Text style={[styles.button, {color: this.props.color}]}>Cancelar</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={this.save}>
-                            <Text style={styles.button}>Salvar</Text>
+                            <Text style={[styles.button, {color: this.props.color}]}>Salvar</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

@@ -8,14 +8,14 @@ import 'moment/locale/pt-br'
 import Constants from 'expo-constants'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-// import axios from 'axios'
+import axios from 'axios'
 
-// import { server, showError } from '../common'
-// import tomorrowImage from '../../assets/imgs/tomorrow.jpg'
-// import weekImage from '../../assets/imgs/week.jpg'
-// import monthImage from '../../assets/imgs/month.jpg'
-import commonStyles from '../commonStyles'
+import { server, showError } from '../common'
 import todayImage from '../../assets/imgs/today.jpg'
+import tomorrowImage from '../../assets/imgs/tomorrow.jpg'
+import weekImage from '../../assets/imgs/week.jpg'
+import monthImage from '../../assets/imgs/month.jpg'
+import commonStyles from '../commonStyles'
 import Task from '../components/Task'
 import AddTask from '../views/AddTask'
 
@@ -38,10 +38,17 @@ export default class TaskList extends Component {
         //     showDoneTasks: savedState.showDoneTasks
         // }, this.filterTasks)
 
-        // this.loadTasks()
+        this.loadTasks()
     }
 
     loadTasks = async () => {
+        try {
+            const resp = await axios.get(`${server}/tasks`)
+            this.setState({tasks: resp.data}, this.filterTasks)
+        } catch(e) {
+            showError(e)
+        }
+
         // try {
         //     const maxDate = moment()
         //     .add({days: this.props.daysAhead})
@@ -76,81 +83,59 @@ export default class TaskList extends Component {
 
 
 
-    addTask = newTask => {
+    addTask = async newTask => {
         if (!newTask.desc || !newTask.desc.trim()) {
             Alert.alert('Dados inválidos', 'Descrição não informada!')
+            return
         }
 
-        let tasks = [...this.state.tasks]
-        tasks.push({
-            id: Math.random(),
-            desc: newTask.desc,
-            estimateAt: newTask.date,
-            doneAt: null
-        })
-
-        this.setState({ tasks, showAddTask: false}, this.filterTasks)
-
-        // try {
-        //     await axios.post(`${server}/tasks`, {
-        //         desc: newTask.desc,
-        //         estimateAt: newTask.date
-        //     })
-        //     this.setState({showAddTask: false}, this.loadTasks)
-        // } catch(e) {
-        //     showError(e)
-        //     console.error(newTask.date)
-            
-        // }
+        try {
+            await axios.post(`${server}/tasks`, {
+                desc: newTask.desc,
+                estimateAt: newTask.date
+            })
+            this.setState({showAddTask: false}, this.loadTasks)
+        } catch(e) {
+            showError(e)            
+        }
         
 
     }
 
-    toggleTask = taskId => {
-        const tasks =  [...this.state.tasks]
-        tasks.forEach(task => {
-            if (task.id == taskId) {
-                task.doneAt = task.doneAt ? null : new Date()
-            }
-        })
-
-        this.setState({ tasks }, this.filterTasks)
-        // try {
-        //     await axios.put(`${server}/tasks/${taskId}/toggle`)
-        //     this.loadTasks()
-        // } catch(e) {
-        //     showError(e)
-        // }
+    toggleTask = async taskId => {
+        try {
+            await axios.put(`${server}/tasks/${taskId}/toggle`)
+            this.loadTasks()
+        } catch(e) {
+            showError(e)
+        }
     }
 
-    deleteTask = id => {
-        const tasks = this.state.tasks.filter(task => task.id !== id)
-        this.setState({ tasks }, this.filterTasks)
-
-        // try {
-        //     await axios.delete(`${server}/tasks/${id}`)
-        //     this.loadTasks()
-        // } catch(e) {
-        //     showError(e)
-        // }
+    deleteTask = async id => {
+        try {
+            await axios.delete(`${server}/tasks/${id}`)
+            this.loadTasks()
+        } catch(e) {
+            showError(e)
+        }
     }
 
     getImage = () => {
-        // switch(this.props.daysAhead) {
-        //     case 0: return todayImage
-        //     case 1: return tomorrowImage
-        //     case 7: return weekImage
-        //     default: return monthImage
-        // }
+        switch(this.props.daysAhead) {
+            case 0: return todayImage
+            case 1: return tomorrowImage
+            case 7: return weekImage
+            default: return monthImage
+        }
     }
 
     getColor= () => {
-        // switch(this.props.daysAhead) {
-        //     case 0: return commonStyles.colors.today
-        //     case 1: return commonStyles.colors.tomorrow
-        //     case 7: return commonStyles.colors.week
-        //     default: return commonStyles.colors.month
-        // }
+        switch(this.props.daysAhead) {
+            case 0: return commonStyles.colors.today
+            case 1: return commonStyles.colors.tomorrow
+            case 7: return commonStyles.colors.week
+            default: return commonStyles.colors.month
+        }
     }
 
     render() {
@@ -164,16 +149,14 @@ export default class TaskList extends Component {
             <View style={styles.container}>
                 <AddTask isVisible={this.state.showAddTask}
                     onCancel={() => this.setState({showAddTask: false})} 
-                    onSave={this.addTask}/>
-                <ImageBackground source={todayImage} 
+                    onSave={this.addTask} color={this.getColor()}/>
+                <ImageBackground source={this.getImage()} 
                     style={styles.background}>
-                {/* <ImageBackground style={styles.background} 
-                    source={this.getImage()}> */}
                     <View style={styles.iconBar}>
-                        {/* <TouchableOpacity onPress={() => this.props.navigation.openDrawer()}>
+                        <TouchableOpacity onPress={() => this.props.navigation.openDrawer()}>
                             <Icon name='bars'
-                                size={20} color={commonStyles.colors.secondary}/>
-                        </TouchableOpacity> */}
+                                size={30} color={commonStyles.colors.secondary}/>
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={this.toggleFilter}>
                             <Icon name={this.state.showDoneTasks 
                                 ? 'eye': 'eye-slash'}
@@ -182,7 +165,7 @@ export default class TaskList extends Component {
                         </TouchableOpacity>
                     </View>
                     <View style={styles.titleBar}>
-                        <Text style={styles.title}>Hoje</Text>
+                        <Text style={styles.title}>{this.props.title}</Text>
                         {/* <Text style={styles.title}>{this.props.title}</Text> */}
                         <Text style={styles.subtitle}>{TODAY}</Text>
                     </View>
@@ -194,14 +177,13 @@ export default class TaskList extends Component {
                         renderItem={({item}) => <Task {...item} onDelete={this.deleteTask} onToggleTask={this.toggleTask}/>}/>
 
                 </View>
-                <TouchableOpacity style={styles.addButton}
-                    onPress={() => this.setState({showAddTask: true})}>
-                {/* <TouchableOpacity style={[
+
+                <TouchableOpacity style={[
                     styles.addButton, 
                     {backgroundColor: this.getColor()}
-                ]}
+                    ]}
                     onPress={() => this.setState({showAddTask: true})}
-                    activeOpacity={0.7}> */}
+                    activeOpacity={0.7}>
                     <Icon name='plus' size={30}
                         color={commonStyles.colors.secondary}/>
                 </TouchableOpacity>
@@ -222,9 +204,10 @@ const styles = StyleSheet.create({
     },
     iconBar: {
         flexDirection: 'row',
-        justifyContent: "flex-end",
-        marginHorizontal: 30,
-        marginTop: Constants.statusBarHeight
+        justifyContent: "space-between",
+        marginLeft: 10,
+        marginRight: 30,
+        marginTop: Constants.statusBarHeight + 10
     },
     titleBar: {
         flex: 1,

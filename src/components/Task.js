@@ -33,7 +33,7 @@ export default props => {
     const getRightContent = () => {
         return (
             <TouchableOpacity style={styles.right} 
-                onPress={() => console.warn('deletou direita')}>
+                onPress={() => props.onDelete && props.onDelete(props.id)}>
                 <Icon name="trash" size={30} color='#fff'/>
             </TouchableOpacity>
         )
