@@ -82,7 +82,7 @@ export default class AddTask extends Component {
                         value={this.state.desc}/>
                     {this.getDateTimePicker()}
                     <View style={styles.buttons}>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={this.props.onCancel}>
                             <Text style={styles.button}>Cancelar</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={this.save}>
